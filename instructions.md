@@ -7,12 +7,16 @@
 1. [Python](https://www.python.org/downloads/) installed on your system
 2. A [CircleCI](https://circleci.com/signup/) account
 3. A [GitHub](https://github.com/) account
-4. Accounts at [test.pypi.org](https://test.pypi.org/account/register/) and [pypi.org]()
+4. Accounts at [test.pypi.org](https://test.pypi.org/account/register/) and [pypi.org](https://pypi.org/)
 - test.pypi.org: allows you to try distribution tools and processes without affecting the real index
-- pypi.org: 
+- pypi.org: affects the real index
+    - Setting up TestPyPI: Google Authenticator -> Add a code -> Scan a QR code -> Enter the 6 digit code at https://test.pypi.org/manage/account/totp-provision
+    - Setting up PyPI: Google Authenticator -> Add a code -> Scan a QR code -> Enter the 6 digit code at https://pypi.org/manage/account/totp-provision
 
-Note: Authentication app of choice: [Google Authenticator](https://apps.apple.com/us/app/google-authenticator/id388497605)
-- Setting up TestPyPI: Google Authenticator -> Add a code -> Scan a QR code -> Enter the 6 digit code at https://test.pypi.org/manage/account/totp-provision
+Notes:
+- MAKE SURE to do this action for both TestPyPI and PyPI (!!!)
+- Authentication app of choice: [Google Authenticator](https://apps.apple.com/us/app/google-authenticator/id388497605)
+
 
 # Creating a Python package
 
@@ -471,9 +475,30 @@ Notes:
     - To log into test.pypi.org, authenticate using the Google Authenticator app on your phone
     - I created a token called `global_token` with Scope for my entire account
 
+Required: Repeating the above steps, but for PyPI (You will need this setup later for the pypi_publish step)
+- https://pypi.org/manage/account/
+- Make sure you authenticate via Google Authenticator app on your phone
+- Create an API token named `global_token` with Scope for entire account
+
 Optional: Adding a .pypirc file
 - Navigate to your user profile in the file explorer: %USERPROFILE%
 - Create a file named .pypirc -> copy/paste contents from TestPyPI -> Save As no extension (so that .txt does not get added by your text editor)
+
+Here is what my file looks like right now:
+
+```bash
+# C:\Users\Myles\.pypirc
+[testpypi]
+  username = __token__
+  password = pypi- ...
+
+[pypi]
+  username = __token__
+  password = pypi- ...
+
+```
+
+We can proceed with testing out the package on test.pypi.org to make sure everything is working!
 
 In the root folder: (Make sure you are not using the test environment)
 
@@ -522,6 +547,9 @@ Notes:
         - mylescgthomaspy: This is the name of the package that is being installed from TestPyPI
 
 Error warning: TestPyPI had trouble downloading pandas, so I had to `pip install` all of my requirements, after creating the virtual environment, but before downloading `mylescgthomaspy`.
+
+Optional: Publish our package to pypi.org to make sure everything is working
+- I did not do this, nor does the reference material, so continue on to automating this process
 
 Success! Now we can automate the publishing process with CircleCI.
 
@@ -677,8 +705,8 @@ This configuration file instructs the pipeline to install the necessary dependen
 The workflow part of the configuration specifies filters, the sequence the jobs should be executed in, and their dependencies.
 
 For example:
-- the jobs test_pypi_publish and pypi_publish cannot run if the build_test job fails.
-- The test_pypi_publish and pypi_publish jobs run only in the develop and main branches, respectively.
+- the jobs `test_pypi_publish` and `pypi_publish` cannot run if the `build_test` job fails.
+- The `test_pypi_publish` and `pypi_publish` jobs run only in the develop and main branches, respectively.
 
 ## Connecting the project to CircleCI
 
@@ -718,30 +746,7 @@ While still on the CircleCI project (mylescgthomaspy), cancel the workflow (if n
     - 1: Name: TWINE_USERNAME; Value: mylesthomas
     - 2: Name: TWINE_PASSWORD; Value: ...
 
-Note: These credentials are the username + password for your account at PyPI.org.
-
-Aside: you MIGHT need .pypirc setup during pypi_publish (I am not sure if setting up these credentials is enough...), so make sure your file looks something like this:
-
-```bash
-[testpypi]
-  username = __token__
-  password = *api key from global_token above*
-
-[distutils]
-index-servers =
-    pypi
-
-[pypi]
-repository: https://upload.pypi.org/legacy/
-username: <your-username-for-pypy.org-login>
-password: <your-password-for-pypy.org-login>
-
-```
-
-Notes:
-- Make sure that username for testpypi is __token__
-- The distutils/pypi came from ChatGPT, and may be totally unnecessary
-- https://upload.pypi.org/legacy/ is an API endpoint for uploading files to PyPI.
+Note: These credentials are the username + password for your account at PyPI.org. (Remember, although we have not pushed to PyPI.org yet, we should have set up an identical account to the TestPyPI.org, which we have already pushed to once)
 
 Next, we will create a change log to track the changes in our package.
 
@@ -781,8 +786,6 @@ VERSION = '0.0.2'
 
 ```
 
-Note: If you don’t bump the version, the publishing job will fail because you cannot publish the same version twice.
-
 One last thing: In order for the build_test to run, you must update the `.circleci/config.yml` to match the VERSION in `setup.py`.
 - In line 15, change 0.0.1 to 0.0.2
     - In line 10, `python3 setup.py sdist bdist_wheel` will update the wheel/.whl file in ./dist to reflect the VERSION in `setup.py`
@@ -797,6 +800,8 @@ pipenv install dist/mylescgthomaspy-0.0.2-py3-none-any.whl
 ...
 
 ```
+
+Important Note: If you don’t bump the version, the publishing job will fail because you cannot publish the same version twice.
 
 Next, Commit the changes and push to GitHub to trigger a build.
 
@@ -816,7 +821,7 @@ Head to https://app.circleci.com/pipelines/github/MylesThomas to check and see i
 
 1. [Circle CI Blog - Publishing a Python package](https://circleci.com/blog/publishing-a-python-package/?utm_source=google&utm_medium=sem&utm_campaign=sem-google-dg--uscan-en-dsa-tROAS-auth-nb&utm_term=g_-_c__dsa_&utm_content=&gclid=Cj0KCQjwr82iBhCuARIsAO0EAZyyFRP4uLE-m1VslA7nHWiY9ooZFrwcw48eACHOSiJOPCRpHRGEVSMaAmnvEALw_wcB)
 2. [nflfastR Python Guide](https://gist.github.com/Deryck97/dff8d33e9f841568201a2a0d5519ac5e)
-3. []()
+3. [PyPI - Common questions - API Tokens](https://pypi.org/help/#apitoken)
 4. []()
 5. []()
 6. []()
