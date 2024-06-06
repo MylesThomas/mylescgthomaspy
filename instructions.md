@@ -464,6 +464,8 @@ If you see no errors, our Python package is ready for publishing!
 
 ## Publishing the Python package
 
+### test.pypi.org
+
 First, we will first publish our package to test.pypi.org to make sure everything is working.
 
 When we are ready to publish to our package users, we will move on to pypi.org.
@@ -473,14 +475,14 @@ Start by installing `twine` and publish to test.pypi.org.
 Notes:
 - You will be asked to enter your credentials for the site ie. an API token that you can get/add from [here](https://test.pypi.org/manage/account/)
     - To log into test.pypi.org, authenticate using the Google Authenticator app on your phone
-    - I created a token called `global_token` with Scope for my entire account
+    - I created a token called `my_token` with Scope for my entire account
 
 Required: Repeating the above steps, but for PyPI (You will need this setup later for the pypi_publish step)
 - https://pypi.org/manage/account/
 - Make sure you authenticate via Google Authenticator app on your phone
-- Create an API token named `global_token` with Scope for entire account (don’t limit its scope to a particular project, since you are creating a new project.)
+- Create an API token named `my_token` with Scope for entire account (don’t limit its scope to a particular project, since you are creating a new project.)
 
-Optional: Adding a .pypirc file
+Required: Adding a .pypirc file
 - Navigate to your user profile in the file explorer: %USERPROFILE%
 - Create a file named .pypirc -> copy/paste contents from TestPyPI -> Save As no extension (so that .txt does not get added by your text editor)
 
@@ -490,15 +492,15 @@ Here is what my file looks like right now:
 # C:\Users\Myles\.pypirc
 [testpypi]
   username = __token__
-  password = <pypi-...>
+  password = pypi-...
 
 [pypi]
   username = __token__
-  password = <pypi-...>
+  password = pypi-...
 
 ```
 
-Note: I don't think this .pypirc file is doing anything, but leave it here at C:\Users\Myles\.pypirc so that we don't lose the API Tokens. (We will need to add them to CircleCI)
+Note: I am not certain this .pypirc file is doing anything, but leave it here at C:\Users\Myles\.pypirc so that we don't lose the API Tokens. (We will need to add them to CircleCI)
 
 We can proceed with testing out the package on test.pypi.org to make sure everything is working!
 
@@ -550,8 +552,26 @@ Notes:
 
 Error warning: TestPyPI had trouble downloading pandas, so I had to `pip install` all of my requirements, after creating the virtual environment, but before downloading `mylescgthomaspy`.
 
+### pipy.org
+
 Optional: Publish our package to pypi.org to make sure everything is working
 - I did not do this, nor does the reference material, so continue on to automating this process
+
+Steps:
+1. Build:
+
+```bash
+python setup.py sdist bdist_wheel
+```
+
+2. Upload:
+
+```bash
+pip install twine
+twine upload --repository pypi dist/*
+```
+
+View it here: https://pypi.org/project/mylescgthomaspy/0.0.1/
 
 Success! Now we can automate the publishing process with CircleCI.
 
@@ -647,7 +667,7 @@ jobs:
             sudo apt-get update
             sudo apt install -y python3-pip
             sudo pip install pipenv
-            pipenv install dist/mylescgthomaspy-0.0.1-py3-none-any.whl # make sure version of mylescgthomaspy is correct with what is currently on your disk in /dist
+            pipenv install dist/mylescgthomaspy-0.0.1-py3-none-any.whl
             pipenv install pytest
       - run:
           command: | # Run test suite
@@ -665,7 +685,7 @@ jobs:
             sudo apt install -y python3-pip
             sudo pip install pipenv
             pipenv install twine
-            pipenv run twine upload --repository testpypi dist/*
+            pipenv run twine upload --repository testpypi --verbose dist/*
   pypi_publish:
     docker:
       - image: cimg/python:3.11.0
@@ -679,7 +699,7 @@ jobs:
             sudo apt install -y python3-pip
             sudo pip install pipenv
             pipenv install twine
-            pipenv run twine upload dist/*
+            pipenv run twine upload --repository pypi --verbose dist/*
 workflows:
   build_test_publish:
     jobs:
@@ -720,7 +740,7 @@ git commit -m "Automated package publishing, prepared to connect project to Circ
 git push
 ```
 
-Your repository should be similar to [this](https://github.com/CIRCLECI-GWP/publish-python-package/tree/circleci).
+Note: Your repository should be similar to [this](https://github.com/CIRCLECI-GWP/publish-python-package/tree/circleci).
 
 Next, login to your [CircleCI account](https://app.circleci.com/home/).
 
@@ -733,7 +753,7 @@ Note: If you signed up with your GitHub account (which you should), all your rep
         - branch: main (you have to type this in)
 
 Once the workflow status is done working, you will shortly get an email with the results of this workflow.
-- The build_test job will pass, but if you are in either the main or develop branches, expect the build to fail
+- The build_test job should pass, but if you are in either the main or develop branches, expect the build to fail
     - That is because the test_pypi_publish and pypi_publish jobs cannot run yet
         - Test PyPI credentials were expected when we published the package using twine, we could not interact with the terminal while it was running the command in the pipeline.
         - To supply these credentials, we could add flags to the command: twine upload -u USERNAME -p PASSWORD.
@@ -745,13 +765,10 @@ Let's start by creating environment variables to try and remedy this.
 
 While still on the CircleCI project (mylescgthomaspy), cancel the workflow (if needed) and click the 3 dots (...) -> Project Settings in the top right part of the page.
 - Environment Variables -> Add Environment Variable
-    - 1: Name: TWINE_USERNAME; Value: mylesthomas
-    - 2: Name: TWINE_PASSWORD; Value: ...
-    - 3: Name: PYPI_USERNAME; Value: mylesthomas
-    - 4: Name: PYPI_PASSWORD; Value: ...
-        - Note: Idk why we need both 1/2 and 3/4, but
+    - 1: Name: TWINE_USERNAME; Value: __token__
+    - 2: Name: TWINE_PASSWORD; Value: api key starting with `pypi-` (look in .pypirc)
 
-Note: These credentials are the username + password for your account at PyPI.org. (Remember, although we have not pushed to PyPI.org yet, we should have already set up an identical account to the TestPyPI.org, which we have already pushed to once)
+Note: These credentials are NOT the username + password for your account at PyPI.org, but they are the API Token that you setup.
 
 Next, we will create a change log to track the changes in our package.
 
@@ -775,7 +792,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- Added PyPI credentials to connect the project to CircleCI
+- Added Environment Variables in CircleCI to connect the project to PyPI's API
 
 ```
 

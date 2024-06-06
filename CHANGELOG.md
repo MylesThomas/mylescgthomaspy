@@ -9,4 +9,4 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- Added PyPI credentials to connect the project to CircleCI
+- Added Environment Variables in CircleCI to connect the project to PyPI's API

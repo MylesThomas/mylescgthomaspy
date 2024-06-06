@@ -44,7 +44,7 @@ jobs:
             sudo apt install -y python3-pip
             sudo pip install pipenv
             pipenv install twine
-            pipenv run twine upload --verbose dist/*
+            pipenv run twine upload --repository pypi --verbose dist/*
 workflows:
   build_test_publish:
     jobs:
