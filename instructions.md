@@ -691,6 +691,81 @@ git push
 
 Your repository should be similar to [this](https://github.com/CIRCLECI-GWP/publish-python-package/tree/circleci).
 
+Next, login to your [CircleCI account](https://app.circleci.com/home/).
+
+Note: If you signed up with your GitHub account (which you should), all your repositories will be available on the dashboard. Click 'Set Up Project' next to your `mylescgthomaspy` project.
+- Connecting your Github:
+    - https://app.circleci.com/home/ -> Top Right User Profile -> User Settings
+    - GitHub -> 'Connect' -> Authorize circleci
+    - Organizations -> MylesThomas -> Set up a project -> mylescgthomaspy -> 'Set Up Project' -> Fastest
+        - repository: mylescgthomaspy
+        - branch: main (you have to type this in)
+
+Once the workflow status is done working, you will shortly get an email with the results of this workflow.
+- The build_test job will pass, but if you are in either the main or develop branches, expect the build to fail
+    - That is because the test_pypi_publish and pypi_publish jobs cannot run yet
+        - Test PyPI credentials were expected when we published the package using twine, we could not interact with the terminal while it was running the command in the pipeline.
+        - To supply these credentials, we could add flags to the command: twine upload -u USERNAME -p PASSWORD.
+            - However, because the config file is tracked by Git, and our Git repository is public, using the flags would be a security risk. We can avoid this risk by creating environment variables.
+
+Let's start by creating environment variables to try and remedy this.
+
+## Creating environment variables
+
+While still on the CircleCI project (mylescgthomaspy), cancel the workflow (if needed) and click Project Settings on the top right part of the page.
+- Environment Variables -> Add Environment Variable
+    - 1: Name: TWINE_USERNAME; Value: MylesThomas
+    - 2: Name: TWINE_PASSWORD; Value: ...
+
+Note: These credentials are the username + password for your account at PyPI.org.
+
+Next, we will create a change log to track the changes in our package.
+
+### Adding a change log
+
+Head to the root directory and do the following:
+
+```bash
+echo > CHANGELOG.md
+```
+
+```markdown
+# Change Log
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](http://keepachangelog.com/)
+and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [0.0.2] - 2024-06-06
+
+### Added
+
+- Added PyPI credentials to connect the project to CircleCI
+
+```
+
+To make sure the build succeeds, we also need to bump the version in setup.py to 0.0.2 to match the change log.
+
+```py
+# ./setup.py
+from setuptools import setup, find_packages
+
+VERSION = '0.0.2'
+
+...
+
+```
+
+Note: If you don’t bump the version, the publishing job will fail because you cannot publish the same version twice.
+
+Next, Commit the changes and push to GitHub to trigger a build.
+
+```bash
+git add .
+git commit -m "Added PyPI credentials, created CHANGELOG, upgraded to version 0.0.2"
+git push
+```
 
 ---
 
