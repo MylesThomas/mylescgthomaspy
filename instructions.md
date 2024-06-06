@@ -478,7 +478,7 @@ Notes:
 Required: Repeating the above steps, but for PyPI (You will need this setup later for the pypi_publish step)
 - https://pypi.org/manage/account/
 - Make sure you authenticate via Google Authenticator app on your phone
-- Create an API token named `global_token` with Scope for entire account
+- Create an API token named `global_token` with Scope for entire account (don’t limit its scope to a particular project, since you are creating a new project.)
 
 Optional: Adding a .pypirc file
 - Navigate to your user profile in the file explorer: %USERPROFILE%
@@ -498,6 +498,8 @@ Here is what my file looks like right now:
 
 ```
 
+Note: I don't think this .pypirc file is doing anything, but leave it here at C:\Users\Myles\.pypirc so that we don't lose the API Tokens. (We will need to add them to CircleCI)
+
 We can proceed with testing out the package on test.pypi.org to make sure everything is working!
 
 In the root folder: (Make sure you are not using the test environment)
@@ -507,7 +509,7 @@ pip install twine
 twine upload --repository testpypi dist/*
 ```
 
-Note: If it asks for your API Token, when you paste it in, the terminal will not show it on your screen (for security reasons I'd assume). Just paste and press enter.
+Note: If it asks for your API Token, when you paste it in via Ctrl-V, the terminal will not show it on your screen (for security reasons I'd assume). Just use Edit -> Paste and press enter.
 
 You can now view your package on test.pypi.org: https://test.pypi.org/project/mylescgthomaspy/0.0.1/
 
@@ -741,12 +743,15 @@ Let's start by creating environment variables to try and remedy this.
 
 ## Creating environment variables
 
-While still on the CircleCI project (mylescgthomaspy), cancel the workflow (if needed) and click Project Settings on the top right part of the page.
+While still on the CircleCI project (mylescgthomaspy), cancel the workflow (if needed) and click the 3 dots (...) -> Project Settings in the top right part of the page.
 - Environment Variables -> Add Environment Variable
     - 1: Name: TWINE_USERNAME; Value: mylesthomas
     - 2: Name: TWINE_PASSWORD; Value: ...
+    - 3: Name: PYPI_USERNAME; Value: mylesthomas
+    - 4: Name: PYPI_PASSWORD; Value: ...
+        - Note: Idk why we need both 1/2 and 3/4, but
 
-Note: These credentials are the username + password for your account at PyPI.org. (Remember, although we have not pushed to PyPI.org yet, we should have set up an identical account to the TestPyPI.org, which we have already pushed to once)
+Note: These credentials are the username + password for your account at PyPI.org. (Remember, although we have not pushed to PyPI.org yet, we should have already set up an identical account to the TestPyPI.org, which we have already pushed to once)
 
 Next, we will create a change log to track the changes in our package.
 
@@ -792,6 +797,7 @@ One last thing: In order for the build_test to run, you must update the `.circle
 
 ```bash
 # ./.circleci/config.yml
+
 ...
 
 bdist_wheel
@@ -822,6 +828,6 @@ Head to https://app.circleci.com/pipelines/github/MylesThomas to check and see i
 1. [Circle CI Blog - Publishing a Python package](https://circleci.com/blog/publishing-a-python-package/?utm_source=google&utm_medium=sem&utm_campaign=sem-google-dg--uscan-en-dsa-tROAS-auth-nb&utm_term=g_-_c__dsa_&utm_content=&gclid=Cj0KCQjwr82iBhCuARIsAO0EAZyyFRP4uLE-m1VslA7nHWiY9ooZFrwcw48eACHOSiJOPCRpHRGEVSMaAmnvEALw_wcB)
 2. [nflfastR Python Guide](https://gist.github.com/Deryck97/dff8d33e9f841568201a2a0d5519ac5e)
 3. [PyPI - Common questions - API Tokens](https://pypi.org/help/#apitoken)
-4. []()
+4. [Packaging and distributing projects - Create an account](https://packaging.python.org/guides/distributing-packages-using-setuptools/#create-an-account)
 5. []()
 6. []()
