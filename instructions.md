@@ -759,6 +759,21 @@ VERSION = '0.0.2'
 
 Note: If you don’t bump the version, the publishing job will fail because you cannot publish the same version twice.
 
+One last thing: In order for the build_test to run, you must update the `.circleci/config.yml` to match the VERSION in `setup.py`.
+- In line 15, change 0.0.1 to 0.0.2
+    - In line 10, `python3 setup.py sdist bdist_wheel` will update the wheel/.whl file in ./dist to reflect the VERSION in `setup.py`
+
+```bash
+# ./.circleci/config.yml
+...
+
+bdist_wheel
+pipenv install dist/mylescgthomaspy-0.0.2-py3-none-any.whl
+
+...
+
+```
+
 Next, Commit the changes and push to GitHub to trigger a build.
 
 ```bash
@@ -766,6 +781,10 @@ git add .
 git commit -m "Added PyPI credentials, created CHANGELOG, upgraded to version 0.0.2"
 git push
 ```
+
+Head to  to check and see if your build passes!
+
+## Updating the package
 
 ---
 
