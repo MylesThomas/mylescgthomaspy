@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-VERSION = '0.0.2'
+VERSION = '0.0.3'
 DESCRIPTION = 'A package to assist with machine learning and data science tasks'
 LONG_DESCRIPTION = 'A package that makes it easy to get a data science/machine learning project from end-to-end with good software engineering hygiene'
 

@@ -838,6 +838,201 @@ Head to https://app.circleci.com/pipelines/github/MylesThomas to check and see i
 
 ## Updating the package
 
+I will walk through step by step how you should make changes to the package once you get to this point.
+
+1. Ensure that you are not on the main OR develop branch, but on a feature branch, before you start coding:
+
+Checkout the main branch:
+
+```bash
+git checkout main
+```
+
+Check active branches:
+
+```bash
+git branch -a
+```
+
+If there are any branches besides `main` (local) and `remotes/origin/main` (remote), delete them:
+
+```bash
+git branch -d develop
+git push origin -d develop
+```
+
+Create a new local branches AND remote branches named `develop` and `feature`: 
+
+```
+git checkout -b develop
+git push -u origin develop
+
+git checkout -b feature
+git push -u origin feature
+```
+
+Notes:
+- create local branch: git checkout -b
+- create remote branch: git push -u origin
+
+Check that the local/remote branches `main`, `develop` and `feature` are all on the same commit:
+
+```
+git log --oneline
+q
+```
+
+Finally, make sure you are on the local branch `feature`:
+
+```bash
+git switch feature
+```
+
+You may now begin coding!
+
+2. Extend the package's functionality
+
+I added a `helpers` module, and a test to make sure its 1st function is behaving correctly:
+
+```py
+# ./mylescgthomaspy/helpers.py
+import pandas as pd
+
+def flatten_multi_level_columns(df, separator='_'):
+    """
+    Flatten a DataFrame's multi-level columns to a single level by joining level names.
+
+    Parameters:
+        df (pd.DataFrame): DataFrame with multi-level columns.
+        separator (str): String to join the column levels.
+
+    Returns:
+        pd.DataFrame: DataFrame with a single-level column.
+    """
+    # Ensure the DataFrame has multi-level columns
+    if not isinstance(df.columns, pd.MultiIndex):
+        raise ValueError("The DataFrame does not have multi-level columns")
+
+    # Create a new column index by joining the levels of the old index
+    df.columns = [''.join([str(level) if str(level) != '' else '' for level in col]).strip() for col in df.columns]
+
+    return df
+
+```
+
+```py
+# ./tests/helpers_tests.py
+import pandas as pd
+import numpy as np
+from mylescgthomaspy.helpers import flatten_multi_level_columns
+
+# Creating a sample DataFrame with multi-level columns
+columns = pd.MultiIndex.from_tuples([
+    ('A', 'foo'), ('A', 'bar'), ('B', 'foo'), ('B', 'bar')
+])
+data = np.random.randn(4, 4)
+df = pd.DataFrame(data, columns=columns)
+
+# Flatten columns
+df_flattened = flatten_multi_level_columns(df.copy(), separator='_')
+
+assert isinstance(df.columns, pd.MultiIndex)
+assert not isinstance(df_flattened.columns, pd.MultiIndex)
+assert isinstance(df_flattened.columns, pd.Index)
+assert list(df_flattened.columns) == ['A_foo', 'A_bar', 'B_foo', 'B_bar']
+
+```
+
+Once that is good to go, it is time for bumping the versions, updating the ChangeLog, then pushing to Github!
+
+3. Bump the version in `setup.py`
+
+Line 3:
+
+```py
+# ./setup.py
+VERSION = '0.0.3'
+```
+
+4. Bump the version in the `whl` file in the CircleCI config file `config.yml`
+
+Line 15:
+
+```bash
+# ./.circleci/config.yml
+pipenv install dist/mylescgthomaspy-0.0.3-py3-none-any.whl
+```
+
+5. Update the `ChangeLog`
+
+```markdown
+
+## [0.0.3] - 2024-06-06
+
+### Added
+
+- Added a helpers module and tests to go along with it
+
+```
+
+6. Ensure that the build works on your local device
+
+Build the wheel file:
+
+```bash
+python setup.py sdist bdist_wheel
+```
+
+This will ensure that when we build, the requirement file (mylescgthomaspy-0.0.3-py3-none-any.whl) is present and accessible.
+
+7. Push to GitHub
+
+First, double check that you are NOT on `main` or `develop` branch:
+
+```bash
+git branch -a
+git log --oneline
+q
+```
+
+Notes:
+- We want to push to GitHub from a `feature` branch
+    - You can see this in `config.yml`, as pushing to GitHub/calling build from the `develop` or `main` branches will trigger `test_pypi_publish`, which we are not ready for
+        - We need to make sure our code can pass all tests and build first, which `build_test` will do!
+
+Next, add your changes and make a commit:
+
+```
+git add .
+git commit -m "Added functionality of helpers module"
+```
+
+Next, push your local branch `feature` to a new remote branch `feature`:
+
+```bash
+git push -u origin feature
+```
+
+Note: You can remove the `-u origin feature` if the upstream tracking is already setup ie. if this branch already exists.
+
+If the build is successful, then proceed!
+- Check here: https://app.circleci.com/pipelines/github/MylesThomas
+
+Next, create a GitHub Pull Request (PR) to the develop branch. In the command line, you will see something like this right now:
+
+```
+Total 0 (delta 0), reused 0 (delta 0), pack-reused 0
+remote: 
+remote: Create a pull request for 'feature' on GitHub by visiting:
+remote:      https://github.com/MylesThomas/mylescgthomaspy/pull/new/feature
+remote:
+To https://github.com/MylesThomas/mylescgthomaspy.git
+ * [new branch]      feature -> feature
+branch 'feature' set up to track 'origin/feature'.
+```
+
+Click on the first link
+
 ---
 
 ## References
