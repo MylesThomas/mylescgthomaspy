@@ -470,9 +470,10 @@ Notes:
 - You will be asked to enter your credentials for the site ie. an API token that you can get/add from [here](https://test.pypi.org/manage/account/)
     - To log into test.pypi.org, authenticate using the Google Authenticator app on your phone
     - I created a token called `global_token` with Scope for my entire account
-        - Optional: Adding a .pypirc file
-            - Navigate to your user profile: %USERPROFILE%
-            - Create a file named .pypirc, copy/paste contents from TestPyPI, Save As no extension (so that .txt does not get added by your text editor)
+
+Optional: Adding a .pypirc file
+- Navigate to your user profile in the file explorer: %USERPROFILE%
+- Create a file named .pypirc -> copy/paste contents from TestPyPI -> Save As no extension (so that .txt does not get added by your text editor)
 
 In the root folder: (Make sure you are not using the test environment)
 
@@ -714,10 +715,30 @@ Let's start by creating environment variables to try and remedy this.
 
 While still on the CircleCI project (mylescgthomaspy), cancel the workflow (if needed) and click Project Settings on the top right part of the page.
 - Environment Variables -> Add Environment Variable
-    - 1: Name: TWINE_USERNAME; Value: MylesThomas
+    - 1: Name: TWINE_USERNAME; Value: mylesthomas
     - 2: Name: TWINE_PASSWORD; Value: ...
 
 Note: These credentials are the username + password for your account at PyPI.org.
+
+Aside: I believe you need .pypirc setup during pypi_publish (I am not sure if setting up these credentials is enough...), so make sure your file looks something like this:
+
+```bash
+[testpypi]
+  username = mylesthomas
+  password = *api key from global_token above*
+
+[distutils]
+index-servers =
+    pypi
+
+[pypi]
+repository: https://upload.pypi.org/legacy/
+username: <your-username-for-pypy.org-login>
+password: <your-password-for-pypy.org-login>
+
+```
+
+Note: https://upload.pypi.org/legacy/ is an API endpoint for uploading files to PyPI.
 
 Next, we will create a change log to track the changes in our package.
 
@@ -782,7 +803,7 @@ git commit -m "Added PyPI credentials, created CHANGELOG, upgraded to version 0.
 git push
 ```
 
-Head to  to check and see if your build passes!
+Head to https://app.circleci.com/pipelines/github/MylesThomas to check and see if your build passes!
 
 ## Updating the package
 
