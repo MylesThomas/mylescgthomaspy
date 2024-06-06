@@ -861,18 +861,31 @@ git branch -d develop
 git push origin -d develop
 ```
 
-Create a new local branches named `feature` and `develop`
+Create a new local branches AND remote branches named `develop` and `feature`: 
 
 ```
-git checkout -b feature
 git checkout -b develop
+git push -u origin develop
+
+git checkout -b feature
+git push -u origin feature
 ```
 
-Check that the local branches `main`, `develop` and `feature` are all on the same commit:
+Notes:
+- create local branch: git checkout -b
+- create remote branch: git push -u origin
+
+Check that the local/remote branches `main`, `develop` and `feature` are all on the same commit:
 
 ```
 git log --oneline
 q
+```
+
+Finally, make sure you are on the local branch `feature`:
+
+```bash
+git switch feature
 ```
 
 You may now begin coding!
@@ -962,7 +975,17 @@ pipenv install dist/mylescgthomaspy-0.0.3-py3-none-any.whl
 
 ```
 
-6. Push to GitHub
+6. Ensure that the build works on your local device
+
+Build the wheel file:
+
+```bash
+python setup.py sdist bdist_wheel
+```
+
+This will ensure that when we build, the requirement file (mylescgthomaspy-0.0.3-py3-none-any.whl) is present and accessible.
+
+7. Push to GitHub
 
 First, double check that you are NOT on `main` or `develop` branch:
 
@@ -976,6 +999,13 @@ Notes:
 - We want to push to GitHub from a `feature` branch
     - You can see this in `config.yml`, as pushing to GitHub/calling build from the `develop` or `main` branches will trigger `test_pypi_publish`, which we are not ready for
         - We need to make sure our code can pass all tests and build first, which `build_test` will do!
+
+Next, add your changes and make a commit:
+
+```
+git add .
+git commit -m "Added functionality of helpers module"
+```
 
 Next, push your local branch `feature` to a new remote branch `feature`:
 
