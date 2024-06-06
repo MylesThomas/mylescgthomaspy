@@ -490,11 +490,11 @@ Here is what my file looks like right now:
 # C:\Users\Myles\.pypirc
 [testpypi]
   username = __token__
-  password = pypi- ...
+  password = <pypi-...>
 
 [pypi]
   username = __token__
-  password = pypi- ...
+  password = <pypi-...>
 
 ```
 
