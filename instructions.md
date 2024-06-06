@@ -316,7 +316,7 @@ You are connected to Github!
 
 In your terminal (at the root of the project) run:
 
-```
+```bash
 python setup.py sdist bdist_wheel
 ```
 
@@ -325,7 +325,8 @@ This command creates a source distribution AND a shareable wheel that can be pub
 Location of the files:
 - source distribution: C:\Users\Myles\mylescgthomaspy\dist\mylescgthomaspy-0.0.1.tar.gz
 - shareable wheel: C:\Users\Myles\mylescgthomaspy\dist\mylescgthomaspy-0.0.1-py3-none-any.whl
-    - faster than source distribution, it is built already
+    - shareable wheel is faster than source distribution, it is built already
+
 
 To test this (before publishing), create a virtual Python environment and test it out there.
 
@@ -352,7 +353,7 @@ Notes:
 - This is because the python.exe file for the venv is here: C:\Users\Myles\env\Scripts
 - There should be a (env) before your calls in the terminal now
 
-4. Then, install the `mylescgthomaspy` package using the wheel distribution:
+4. Then, install the `mylescgthomaspy` package using the wheel distribution you created at the start of this section:
 
 ```bash
 pip install C:\Users\Myles\mylescgthomaspy\dist\mylescgthomaspy-0.0.1-py3-none-any.whl
@@ -451,14 +452,244 @@ Run the script:
 
 ```bash
 python test.py
+# OR
+python C:\Users\Myles\test.py
 ```
 
-Our Python package is ready for publishing!
+If you see no errors, our Python package is ready for publishing!
 
 ## Publishing the Python package
 
+First, we will first publish our package to test.pypi.org to make sure everything is working.
 
+When we are ready to publish to our package users, we will move on to pypi.org.
 
+Start by installing `twine` and publish to test.pypi.org.
+
+Notes:
+- You will be asked to enter your credentials for the site ie. an API token that you can get/add from [here](https://test.pypi.org/manage/account/)
+    - To log into test.pypi.org, authenticate using the Google Authenticator app on your phone
+    - I created a token called `global_token` with Scope for my entire account
+        - Optional: Adding a .pypirc file
+            - Navigate to your user profile: %USERPROFILE%
+            - Create a file named .pypirc, copy/paste contents from TestPyPI, Save As no extension (so that .txt does not get added by your text editor)
+
+In the root folder: (Make sure you are not using the test environment)
+
+```bash
+pip install twine
+twine upload --repository testpypi dist/*
+```
+
+Note: If it asks for your API Token, when you paste it in, the terminal will not show it on your screen (for security reasons I'd assume). Just paste and press enter.
+
+You can now view your package on test.pypi.org: https://test.pypi.org/project/mylescgthomaspy/0.0.1/
+
+In a separate Python virtual environment, pip install the package.
+
+First, deactivate the terminal that had your first virtual environment open:
+
+```bash
+deactivate
+rmdir /s /q env
+```
+
+Notes:
+- The 2nd call MIGHT only work if you are in an Admin command prompt. You can simply remove this folder via the file directory if that is easier.
+    - /s: Delete the specified directory AND all subdirectories
+    - /q: Run the command in quiet mode ie. don't ask for confirmation
+
+Next, this is what I called from C:\Users\Myles ie. %USERPROFILE%
+
+```bash
+py -m venv env
+.\env\Scripts\activate
+
+pip install pandas
+pip install numpy
+pip install matplotlib
+pip install seaborn
+
+pip install --index-url https://test.pypi.org/simple mylescgthomaspy
+python test.py
+```
+
+Notes:
+- When you run pip install <package-name>, pip searches for the package files in the official Python Package Index, on pypi.org.
+    - We have not published to pypi.org yet, so we need to specify that we are downloading from test.pypi.org
+        - --index-url https://test.pypi.org/simple/: This option tells pip to use a custom package index for the installation instead of the default PyPI (Python Package Index). The URL provided (https://test.pypi.org/simple/) points to the TestPyPI server
+        - mylescgthomaspy: This is the name of the package that is being installed from TestPyPI
+
+Error warning: TestPyPI had trouble downloading pandas, so I had to `pip install` all of my requirements, after creating the virtual environment, but before downloading `mylescgthomaspy`.
+
+Success! Now we can automate the publishing process with CircleCI.
+
+## Automating package publishing with CircleCI
+
+CircleCI: Great for automating scripts
+- Also great for creating a repeatable process for package publication.
+
+We will create a process that can:
+- Upgrade from Test PyPI to PyPI
+- Maintain checks (if you include tests)
+- Allow credentials to be used only by the pipeline, without sharing with every developer working on the package
+
+To begin, from your root directory, create a folder named `tests`. In it, create a file and name it test_temperature.py.
+
+```bash
+mkdir tests
+cd tests
+echo > test_1.py
+```
+
+In tests/test_1.py, enter:
+
+```py
+# ./tests/test_1.py
+from mylescgthomaspy.data import download_nfl_data
+
+def test_1():
+    assert 1 == 1
+
+def test_2():
+    assert 2 == 2
+
+def test_nfl_data_exists():
+    df = download_nfl_data(range(2018, 2020 + 1), ["posteam", "wp", "play_type"])
+    num_rows = df.shape[0]
+    assert num_rows > 0
+
+```
+
+Head back to the virtual environment containing our `mylescgthomaspy` package.
+
+Go to the root folder. Pip install pytest, then run the pytest command:
+
+```bash
+cd mylescgthomaspy
+
+pip install pytest
+pytest
+```
+
+All 3 tests should pass successfully. (You should see something like this)
+
+```bash
+(env) C:\Users\Myles\mylescgthomaspy>pytest
+=============================================== test session starts ===============================================
+platform win32 -- Python 3.11.4, pytest-8.2.2, pluggy-1.5.0
+rootdir: C:\Users\Myles\mylescgthomaspy
+collected 3 items
+
+tests\test_1.py ...                                                                                          [100%]
+
+================================================ 3 passed in 5.95s ================================================ 
+
+(env) C:\Users\Myles\mylescgthomaspy>
+```
+
+Next, add a CircleCI configuration file to the project.
+- Create a folder named .circleci
+- In the new folder, create a file named config.yml
+
+```bash
+mkdir .circleci
+cd .circleci
+echo > config.yml
+```
+
+In .circleci/config.yml, copy and paste:
+
+```bash
+# ./.circleci/config.yml
+version: 2.1
+jobs:
+  build_test:
+    docker:
+      - image: cimg/python:3.11.0
+    steps:
+      - checkout # checkout source code to working directory
+      - run:
+          command: | # create whl and use pipenv to install dependencies
+            python3 setup.py sdist bdist_wheel
+            sudo add-apt-repository universe -y
+            sudo apt-get update
+            sudo apt install -y python3-pip
+            sudo pip install pipenv
+            pipenv install dist/mylescgthomaspy-0.0.1-py3-none-any.whl # make sure version of mylescgthomaspy is correct with what is currently on your disk in /dist
+            pipenv install pytest
+      - run:
+          command: | # Run test suite
+            pipenv run pytest
+  test_pypi_publish:
+    docker:
+      - image: cimg/python:3.11.0
+    steps:
+      - checkout # checkout source code to working directory
+      - run:
+          command: | # create whl, install twine and publish to Test PyPI
+            python3 setup.py sdist bdist_wheel
+            sudo add-apt-repository universe -y
+            sudo apt-get update
+            sudo apt install -y python3-pip
+            sudo pip install pipenv
+            pipenv install twine
+            pipenv run twine upload --repository testpypi dist/*
+  pypi_publish:
+    docker:
+      - image: cimg/python:3.11.0
+    steps:
+      - checkout # checkout source code to working directory
+      - run:
+          command: | # create whl, install twine and publish to PyPI
+            python3 setup.py sdist bdist_wheel
+            sudo add-apt-repository universe -y
+            sudo apt-get update
+            sudo apt install -y python3-pip
+            sudo pip install pipenv
+            pipenv install twine
+            pipenv run twine upload dist/*
+workflows:
+  build_test_publish:
+    jobs:
+      - build_test
+      - test_pypi_publish:
+          requires:
+            - build_test
+          filters:
+            branches:
+              only:
+                - develop
+      - pypi_publish:
+          requires:
+            - build_test
+          filters:
+            branches:
+              only:
+                - main
+```
+
+Note: Line 15 must be updated to reflect the current version (We are still using mylescgthomaspy version-0.0.1)
+
+This configuration file instructs the pipeline to install the necessary dependencies, run tests, and publish the package.
+
+The workflow part of the configuration specifies filters, the sequence the jobs should be executed in, and their dependencies.
+
+For example:
+- the jobs test_pypi_publish and pypi_publish cannot run if the build_test job fails.
+- The test_pypi_publish and pypi_publish jobs run only in the develop and main branches, respectively.
+
+## Connecting the project to CircleCI
+
+First, push your project to Github:
+
+```bash
+git add .
+git commit -m "Automated package publishing, prepared to connect project to CircleCI"
+git push
+```
+
+Your repository should be similar to [this](https://github.com/CIRCLECI-GWP/publish-python-package/tree/circleci).
 
 
 ---
