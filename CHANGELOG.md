@@ -10,3 +10,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 - Added Environment Variables in CircleCI to connect the project to PyPI's API
+
+## [0.0.3] - 2024-06-06
+
+### Added
+
+- Added a helpers module and tests to go along with it
