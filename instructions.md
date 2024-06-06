@@ -720,11 +720,11 @@ While still on the CircleCI project (mylescgthomaspy), cancel the workflow (if n
 
 Note: These credentials are the username + password for your account at PyPI.org.
 
-Aside: I believe you need .pypirc setup during pypi_publish (I am not sure if setting up these credentials is enough...), so make sure your file looks something like this:
+Aside: you MIGHT need .pypirc setup during pypi_publish (I am not sure if setting up these credentials is enough...), so make sure your file looks something like this:
 
 ```bash
 [testpypi]
-  username = mylesthomas
+  username = __token__
   password = *api key from global_token above*
 
 [distutils]
@@ -738,7 +738,10 @@ password: <your-password-for-pypy.org-login>
 
 ```
 
-Note: https://upload.pypi.org/legacy/ is an API endpoint for uploading files to PyPI.
+Notes:
+- Make sure that username for testpypi is __token__
+- The distutils/pypi came from ChatGPT, and may be totally unnecessary
+- https://upload.pypi.org/legacy/ is an API endpoint for uploading files to PyPI.
 
 Next, we will create a change log to track the changes in our package.
 
