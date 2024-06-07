@@ -1014,11 +1014,7 @@ If the build is successful, then proceed!
 - You can ignore the remote branch `feature` once you confirm the build succeeded
     - ... You can quickly do this by following the link in the command line -> Compare & pull request -> 
 
-Next, create a local branch named `develop` and create a GitHub Pull Request (PR) to a new remote branch `origin/develop`.
-
-```bash
-git checkout -b develop
-```
+Next, push your local branch `feature` to a new remote branch `origin/develop`.
 
 Before pushing to `develop`, make sure that the `TWINE_PASSWORD` environment variable on CircleCI is the API Token for TestPyPI, not PyPI.
 - mylescgthomaspy -> Project Settings -> Environment Variables
@@ -1035,6 +1031,8 @@ git push origin develop
 
 Once again - if the build is successful, then proceed!
 - Check here to confirm: https://app.circleci.com/pipelines/github/MylesThomas
+
+Next, create a GitHub Pull Request (PR) from `develop` to `main`.
 
 Before opening a pull request from `develop` to `main`, make sure that the `TWINE_PASSWORD` environment variable on CircleCI is the API Token for PyPI, not TestPyPI.
 - mylescgthomaspy -> Project Settings -> Environment Variables
