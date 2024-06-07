@@ -861,21 +861,13 @@ git branch -d develop
 git push origin -d develop
 ```
 
-Create a new local branches AND remote branches named `develop` and `feature`: 
+Create a new local branch `feature`: 
 
-```
-git checkout -b develop
-git push -u origin develop
-
+```bash
 git checkout -b feature
-git push -u origin feature
 ```
 
-Notes:
-- create local branch: git checkout -b
-- create remote branch: git push -u origin
-
-Check that the local/remote branches `main`, `develop` and `feature` are all on the same commit:
+Check that the local/remote branches `main` and `feature` are all on the same commit:
 
 ```
 git log --oneline
@@ -985,9 +977,11 @@ python setup.py sdist bdist_wheel
 
 This will ensure that when we build, the requirement file (mylescgthomaspy-0.0.3-py3-none-any.whl) is present and accessible.
 
+Note: A new wheel file should have just appeared in ./dist
+
 7. Push to GitHub
 
-First, double check that you are NOT on `main` or `develop` branch:
+First, double check that you are NOT on the `main` branch:
 
 ```bash
 git branch -a
@@ -1018,7 +1012,7 @@ Note: You can remove the `-u origin feature` if the upstream tracking is already
 If the build is successful, then proceed!
 - Check here: https://app.circleci.com/pipelines/github/MylesThomas
 
-Next, create a GitHub Pull Request (PR) to the develop branch. In the command line, you will see something like this right now:
+Next, create a GitHub Pull Request (PR) to the `develop` branch. In the command line, you will see something like this right now:
 
 ```
 Total 0 (delta 0), reused 0 (delta 0), pack-reused 0
@@ -1031,7 +1025,39 @@ To https://github.com/MylesThomas/mylescgthomaspy.git
 branch 'feature' set up to track 'origin/feature'.
 ```
 
-Click on the first link
+You can also do it this way:
+- https://github.com/MylesThomas/mylescgthomaspy -> Compare & pull request
+- Make sure that the two branches being compared looks like this:
+    - base: develop
+    - compare: feature
+- Scroll down and ensure all changes look good
+- Fill in the title/description:
+    - title: Add new 'helpers' module to enhance functionality
+    - description: This pull request introduces a new 'helpers' module to our Python package, aimed at providing utility functions that can be used across different parts of the application. This addition will help in maintaining clean code and promoting reuse of common functionality.
+        - Can use ChatGPT to help write these...
+- Create pull request!
+
+Because we have already checked that the build works, you can go ahead and Merge pull request. This will make a commit to the `develop` branch, where we will now try and make sure that the build AND test_pypi_publish can successfully work.
+
+Note: You can now delete the `feature` branch via GitHub.com by pressing 'Delete branch'
+
+If the build and/or test_pypi_publish do not succeed, here are some troubleshooting steps:
+
+Let's ensure that we have everything from the remote (we probably don't, since you usually need to `git pull` after merging a pull request)
+
+```bash
+git pull origin develop
+```
+
+Once we figure out why the build failed, let's push local changes to remote `develop` to start the build again:
+
+```
+git add .
+git commit -m "Fixing config.yml to reflect environment variables in CircleCI"
+git push -u origin develop
+```
+
+If this build works, 
 
 ---
 
