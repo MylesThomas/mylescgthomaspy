@@ -991,7 +991,7 @@ q
 
 Notes:
 - We want to push to GitHub from a `feature` branch
-    - You can see this in `config.yml`, as pushing to GitHub/calling build from the `develop` or `main` branches will trigger `test_pypi_publish`, which we are not ready for
+    - You can see this in `config.yml`, as pushing to GitHub/calling build from the `develop` or `main` branches will trigger `test_pypi_publish`, which we are not ready for yet
         - We need to make sure our code can pass all tests and build first, which `build_test` will do!
 
 Next, add your changes and make a commit:
@@ -1001,63 +1001,89 @@ git add .
 git commit -m "Added functionality of helpers module"
 ```
 
-Next, push your local branch `feature` to a new remote branch `feature`:
+Next, push your local branch `feature` to a new remote branch `origin/feature`:
 
 ```bash
-git push -u origin feature
+git push origin feature
 ```
 
-Note: You can remove the `-u origin feature` if the upstream tracking is already setup ie. if this branch already exists.
+Note: You can remove the `-u` before `origin feature` if the upstream tracking is not something you want/need to setup. (I don't)
 
 If the build is successful, then proceed!
-- Check here: https://app.circleci.com/pipelines/github/MylesThomas
+- Check here to confirm: https://app.circleci.com/pipelines/github/MylesThomas
+- You can ignore the remote branch `feature` once you confirm the build succeeded
+    - ... You can quickly do this by following the link in the command line -> Compare & pull request -> 
 
-Next, create a GitHub Pull Request (PR) to the `develop` branch. In the command line, you will see something like this right now:
-
-```
-Total 0 (delta 0), reused 0 (delta 0), pack-reused 0
-remote: 
-remote: Create a pull request for 'feature' on GitHub by visiting:
-remote:      https://github.com/MylesThomas/mylescgthomaspy/pull/new/feature
-remote:
-To https://github.com/MylesThomas/mylescgthomaspy.git
- * [new branch]      feature -> feature
-branch 'feature' set up to track 'origin/feature'.
-```
-
-You can also do it this way:
-- https://github.com/MylesThomas/mylescgthomaspy -> Compare & pull request
-- Make sure that the two branches being compared looks like this:
-    - base: develop
-    - compare: feature
-- Scroll down and ensure all changes look good
-- Fill in the title/description:
-    - title: Add new 'helpers' module to enhance functionality
-    - description: This pull request introduces a new 'helpers' module to our Python package, aimed at providing utility functions that can be used across different parts of the application. This addition will help in maintaining clean code and promoting reuse of common functionality.
-        - Can use ChatGPT to help write these...
-- Create pull request!
-
-Because we have already checked that the build works, you can go ahead and Merge pull request. This will make a commit to the `develop` branch, where we will now try and make sure that the build AND test_pypi_publish can successfully work.
-
-Note: You can now delete the `feature` branch via GitHub.com by pressing 'Delete branch'
-
-If the build and/or test_pypi_publish do not succeed, here are some troubleshooting steps:
-
-Let's ensure that we have everything from the remote (we probably don't, since you usually need to `git pull` after merging a pull request)
+Next, create a local branch named `develop` and create a GitHub Pull Request (PR) to a new remote branch `origin/develop`.
 
 ```bash
-git pull origin develop
+git checkout -b develop
 ```
 
-Once we figure out why the build failed, let's push local changes to remote `develop` to start the build again:
+Before pushing to `develop`, make sure that the `TWINE_PASSWORD` environment variable on CircleCI is the API Token for TestPyPI, not PyPI.
+- mylescgthomaspy -> Project Settings -> Environment Variables
+    - Delete: TWINE_PASSWORD
+    - Add Environment Variable:
+        - Name: TWINE_PASSWORD
+        - Value: *paste password from `testpypi` in `.pypirc`*
+
+You can now push to the `develop` branch on Github!
+
+```bash
+git push origin develop
+```
+
+Once again - if the build is successful, then proceed!
+- Check here to confirm: https://app.circleci.com/pipelines/github/MylesThomas
+
+Before opening a pull request from `develop` to `main`, make sure that the `TWINE_PASSWORD` environment variable on CircleCI is the API Token for PyPI, not TestPyPI.
+- mylescgthomaspy -> Project Settings -> Environment Variables
+    - Delete: TWINE_PASSWORD
+    - Add Environment Variable:
+        - Name: TWINE_PASSWORD
+        - Value: *paste password from `pypi` in `.pypirc`*
+
+Next, open a pull request your `develop` branch to the `main` branch:
+- Navigate to the Repository on Github: https://github.com/MylesThomas/mylescgthomaspy
+- Switch to the Develop Branch -> Pull requests -> New pull request
+- Set Base and Compare Branches:
+    - base: main
+    - compare: develop
+- Review the Changes
+    - You should see version bumped up in `setup.py` and `.circleci/config.yml`, a change to `CHANGELOG.md`, as well as various additions to functionality + tests.
+- Create pull request
+- Enter Pull Request Details:
+    - title: Add new 'helpers' module to enhance functionality
+    - description: This pull request introduces a new 'helpers' module to our Python package, aimed at providing utility functions that can be used across different parts of the application. This addition will help in maintaining clean code and promoting reuse of common functionality.
+        - I would advise one to use ChatGPT to help write these...
+- Create pull request
+- Review
+    - Ensure that 'All checks have passed'
+        - This checks that Your tests passed on CircleCI! (When you initially pushed to the `develop` branch - it does not mean that anything has gone up to `main` yet)
+    - Ensure that 'This branch has no conflicts with the base branch'
+- Merge pull request -> Confirm merge
+    - This effectively closes the PR
+
+Final step for sanity: Check on CircleCI that both the `build` AND `pypi_publish` successfully went through
+- Check here to confirm: https://app.circleci.com/pipelines/github/MylesThomas
+
+If you see a successful green with a Trigger Event from `main`, you are all done!
+
+Finish things out by preparing for the next feature you will build.
+
+8. Housekeeping
+
+First, switch your local branch to `main`:
 
 ```
-git add .
-git commit -m "Fixing config.yml to reflect environment variables in CircleCI"
-git push -u origin develop
+git switch main
 ```
 
-If this build works, 
+Next, pull from the remote branch `main` on GitHub, so that your local `main` branch is up to speed with the changes that you have been making to `feature` and `develop`.
+
+```
+git pull origin main
+```
 
 ---
 
@@ -1067,5 +1093,3 @@ If this build works,
 2. [nflfastR Python Guide](https://gist.github.com/Deryck97/dff8d33e9f841568201a2a0d5519ac5e)
 3. [PyPI - Common questions - API Tokens](https://pypi.org/help/#apitoken)
 4. [Packaging and distributing projects - Create an account](https://packaging.python.org/guides/distributing-packages-using-setuptools/#create-an-account)
-5. []()
-6. []()
