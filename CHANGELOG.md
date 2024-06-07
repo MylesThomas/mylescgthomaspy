@@ -15,4 +15,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- Added a helpers module and tests to go along with it
+- Added a Helpers module and tests to go along with it
+
+## [0.0.4] - 2024-06-06
+
+### Added
+
+- Added a new method to the ETL module to help impute missing values
+
