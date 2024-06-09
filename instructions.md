@@ -848,6 +848,14 @@ Checkout the main branch:
 git checkout main
 ```
 
+Git pull to make sure you are up to date with what is on GitHub.com (this is ESPECIALLY important after merging a pull request, because your local branch will not have the history of the merge that occurred online):
+
+```
+git pull origin main
+```
+
+Note: I have often made the mistake of forgetting this step, which can easily get you into Git hell.
+
 Check active branches:
 
 ```bash
